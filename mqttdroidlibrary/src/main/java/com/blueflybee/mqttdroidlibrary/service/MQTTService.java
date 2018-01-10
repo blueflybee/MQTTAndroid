@@ -45,14 +45,15 @@ public class MQTTService extends Service {
 
   private MqttAndroidClient mMqttAndroidClient;
 
-  private final String mServerUri = "tcp://192.168.90.200:61613";
+//  private final String mServerUri = "tcp://192.168.90.200:61613";
+  private final String mServerUri = "tcp://192.168.92.53:1883";
 
   private String mClientId = "ExampleAndroidClient";
-  private final String mSubscriptionTopic = "exampleAndroidTopic";
+  private final String mSubscriptionTopic = "doorbell.topic";
   private final String publishTopic = "exampleAndroidPublishTopic";
   private final String mPublishMessage = "Hello World!";
-  private final String mUserName = "admin";
-  private final String mPassword = "password";
+  private final String mUserName = "qtec_smarthome_doorbell";
+  private final String mPassword = "123456";
 
   private Messenger mMessenger;
 
@@ -120,7 +121,11 @@ public class MQTTService extends Service {
 
       @Override
       public void messageArrived(String topic, MqttMessage message) throws Exception {
-        showLog("Incoming message: " + new String(message.getPayload()));
+//        showLog("Incoming message: " + new String(message.getPayload()));
+        // message Arrived!
+        MQMessage mqMessage = new MQMessage(topic, new String(message.getPayload()));
+        System.out.println("mqMessage = " + mqMessage);
+        sendMQMessage(MSG_RECEIVE_SUCCESS, mqMessage);
       }
 
       @Override
@@ -197,15 +202,15 @@ public class MQTTService extends Service {
       });
 
       // THIS DOES NOT WORK!
-      mMqttAndroidClient.subscribe(mSubscriptionTopic, 0, new IMqttMessageListener() {
-        @Override
-        public void messageArrived(String topic, MqttMessage message) throws Exception {
-          // message Arrived!
-          MQMessage mqMessage = new MQMessage(topic, new String(message.getPayload()));
-          System.out.println("mqMessage = " + mqMessage);
-          sendMQMessage(MSG_RECEIVE_SUCCESS, mqMessage);
-        }
-      });
+//      mMqttAndroidClient.subscribe(mSubscriptionTopic, 0, new IMqttMessageListener() {
+//        @Override
+//        public void messageArrived(String topic, MqttMessage message) throws Exception {
+//          // message Arrived!
+//          MQMessage mqMessage = new MQMessage(topic, new String(message.getPayload()));
+//          System.out.println("mqMessage = " + mqMessage);
+//          sendMQMessage(MSG_RECEIVE_SUCCESS, mqMessage);
+//        }
+//      });
 
     } catch (MqttException ex) {
       System.err.println("Exception whilst subscribing");
