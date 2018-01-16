@@ -39,6 +39,7 @@ public class MQTTService extends Service {
   public static final String EXTRA_MQTT_MESSENGER = "extra_mqtt_messenger";
   public static final String EXTRA_CLIENT_ID = "extra_client_id";
   public static final int MSG_RECEIVE_SUCCESS = 1;
+  public static final int MSG_MQTT_STATUS = 2;
 
   private final MQTTBinder mBinder = new MQTTBinder();
 
@@ -244,6 +245,8 @@ public class MQTTService extends Service {
 
   private void showLog(String mainText) {
     System.out.println("LOG: " + mainText);
+    MQMessage mqMessage = new MQMessage("mqqt_status", mainText);
+    sendMQMessage(MSG_MQTT_STATUS, mqMessage);
   }
 
   private void close() {

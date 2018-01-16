@@ -94,6 +94,11 @@ public class MainActivity extends AppCompatActivity {
           MQMessage mqMessage = (MQMessage) msg.obj;
           Toast.makeText(MainActivity.this, mqMessage.toString(), Toast.LENGTH_SHORT).show();
           break;
+
+        case MQTTService.MSG_MQTT_STATUS:
+          MQMessage mqStatusMessage = (MQMessage) msg.obj;
+          Toast.makeText(MainActivity.this, mqStatusMessage.getMessage(), Toast.LENGTH_SHORT).show();
+          break;
         default:
           break;
       }
