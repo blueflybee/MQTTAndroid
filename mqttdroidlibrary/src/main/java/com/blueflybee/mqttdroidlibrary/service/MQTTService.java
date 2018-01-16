@@ -76,12 +76,6 @@ public class MQTTService extends Service {
 //    unregisterReceiver(getBleReceiver());
   }
 
-  @Override
-  public void onStart(Intent intent, int startId) {
-    super.onStart(intent, startId);
-    System.out.println("MQTTService.onStart");
-  }
-
   @Nullable
   @Override
   public IBinder onBind(Intent intent) {
