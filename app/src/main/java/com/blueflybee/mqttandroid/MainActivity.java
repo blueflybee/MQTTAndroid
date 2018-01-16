@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.blueflybee.mqttdroidlibrary.data.MQMessage;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
       public void onClick(View view) {
         Intent intent = new Intent(MainActivity.this, MQTTService.class);
         intent.putExtra(MQTTService.EXTRA_MQTT_MESSENGER, new Messenger(mHandler));
+        intent.putExtra(MQTTService.EXTRA_CLIENT_ID, clientId());
         startService(intent);
 
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
@@ -54,10 +56,12 @@ public class MainActivity extends AppCompatActivity {
     findViewById(R.id.btn_stop_service).setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        Intent intent = new Intent(MainActivity.this, MQTTService.class);
-        unbindService(mServiceConnection);
-        stopService(intent);
-        mMQTTService = null;
+        if (mMQTTService != null) {
+          Intent intent = new Intent(MainActivity.this, MQTTService.class);
+          unbindService(mServiceConnection);
+          stopService(intent);
+          mMQTTService = null;
+        }
       }
     });
 
@@ -70,6 +74,10 @@ public class MainActivity extends AppCompatActivity {
       }
     });
 
+  }
+
+  private String clientId() {
+    return ((EditText) findViewById(R.id.et_client_id)).getText().toString().trim();
   }
 
   @Override

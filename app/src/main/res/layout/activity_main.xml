@@ -8,6 +8,12 @@
     android:layout_height="match_parent"
     tools:context="com.blueflybee.mqttandroid.MainActivity">
 
+    <EditText
+        android:id="@+id/et_client_id"
+        android:hint="client id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <Button
         android:id="@+id/btn_start_service"
         android:layout_width="wrap_content"

@@ -11,13 +11,13 @@ import android.os.PowerManager;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 
+import com.blueflybee.mqttdroidlibrary.MQQTUtils;
 import com.blueflybee.mqttdroidlibrary.data.MQMessage;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -37,6 +37,7 @@ public class MQTTService extends Service {
 
   public static final String TAG = MQTTService.class.getSimpleName();
   public static final String EXTRA_MQTT_MESSENGER = "extra_mqtt_messenger";
+  public static final String EXTRA_CLIENT_ID = "extra_client_id";
   public static final int MSG_RECEIVE_SUCCESS = 1;
 
   private final MQTTBinder mBinder = new MQTTBinder();
@@ -45,15 +46,16 @@ public class MQTTService extends Service {
 
   private MqttAndroidClient mMqttAndroidClient;
 
-//  private final String mServerUri = "tcp://192.168.90.200:61613";
+  //  private final String mServerUri = "tcp://192.168.90.200:61613";
   private final String mServerUri = "tcp://192.168.92.53:1883";
 
-  private String mClientId = "ExampleAndroidClient";
-  private final String mSubscriptionTopic = "doorbell.topic";
+  private String mClientId = "";
+  //  smarthome.topic.{mac}
+  private String mSubscriptionTopic = "smarthome.topic.";
   private final String publishTopic = "exampleAndroidPublishTopic";
   private final String mPublishMessage = "Hello World!";
-  private final String mUserName = "qtec_smarthome_doorbell";
-  private final String mPassword = "123456";
+  private final String mUserName = "doorbell_client";
+  private final String mPassword = "doorbell";
 
   private Messenger mMessenger;
 
@@ -61,7 +63,7 @@ public class MQTTService extends Service {
   public void onCreate() {
     System.out.println(TAG + ".onCreate+++++++++++++++++++++++++++++++++++");
     acquireWakeLock();
-    initMQQT();
+
 //    registerReceiver(getBleReceiver(), BleService.getIntentFilter());
   }
 
@@ -74,6 +76,11 @@ public class MQTTService extends Service {
 //    unregisterReceiver(getBleReceiver());
   }
 
+  @Override
+  public void onStart(Intent intent, int startId) {
+    super.onStart(intent, startId);
+    System.out.println("MQTTService.onStart");
+  }
 
   @Nullable
   @Override
@@ -94,11 +101,16 @@ public class MQTTService extends Service {
     if (mMessenger == null) {
       mMessenger = intent.getParcelableExtra(EXTRA_MQTT_MESSENGER);
     }
+    mClientId = intent.getStringExtra(EXTRA_CLIENT_ID);
+    initMQQT();
+
     return START_STICKY;
   }
 
   private void initMQQT() {
-    mClientId = mClientId + System.currentTimeMillis();
+    if (mMqttAndroidClient != null && mMqttAndroidClient.isConnected()) return;
+
+    mSubscriptionTopic = mSubscriptionTopic + MQQTUtils.getAndroidID(getContext());
 
     mMqttAndroidClient = new MqttAndroidClient(getApplicationContext(), mServerUri, mClientId);
     mMqttAndroidClient.setCallback(new MqttCallbackExtended() {
@@ -140,7 +152,9 @@ public class MQTTService extends Service {
   public void publishMessage() {
 
     try {
+      if (mMqttAndroidClient == null) return;
       MqttMessage message = new MqttMessage();
+      message.setQos(1);
       message.setPayload(mPublishMessage.getBytes());
       mMqttAndroidClient.publish(mSubscriptionTopic, message);
       showLog("Message Published");
@@ -179,6 +193,7 @@ public class MQTTService extends Service {
         @Override
         public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
           showLog("Failed to connect to: " + mServerUri);
+          close();
         }
       });
 
@@ -189,7 +204,7 @@ public class MQTTService extends Service {
 
   private void subscribeToTopic() {
     try {
-      mMqttAndroidClient.subscribe(mSubscriptionTopic, 0, null, new IMqttActionListener() {
+      mMqttAndroidClient.subscribe(mSubscriptionTopic, 1, null, new IMqttActionListener() {
         @Override
         public void onSuccess(IMqttToken asyncActionToken) {
           showLog("Subscribed!");
@@ -240,9 +255,11 @@ public class MQTTService extends Service {
 
   private void close() {
     try {
-      mMqttAndroidClient.close();
-      mMqttAndroidClient.disconnect();
-      mMqttAndroidClient = null;
+      if (mMqttAndroidClient != null) {
+        mMqttAndroidClient.close();
+        mMqttAndroidClient.disconnect();
+        mMqttAndroidClient = null;
+      }
     } catch (MqttException e) {
       e.printStackTrace();
     }
