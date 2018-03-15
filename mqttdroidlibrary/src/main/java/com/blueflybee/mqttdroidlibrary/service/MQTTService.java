@@ -38,8 +38,11 @@ import java.util.Arrays;
 public class MQTTService extends Service {
 
   public static final String TAG = MQTTService.class.getSimpleName();
+
   public static final String EXTRA_MQTT_MESSENGER = "extra_mqtt_messenger";
   public static final String EXTRA_CLIENT_ID = "extra_client_id";
+  public static final String EXTRA_TOPICS = "extra_topics";
+
   public static final int MSG_RECEIVE_SUCCESS = 1;
   public static final int MSG_MQTT_STATUS = 2;
 
@@ -56,7 +59,7 @@ public class MQTTService extends Service {
   private String mClientId = "";
   //  smarthome/server/s/{android id}
 //  private String mSubscriptionTopics = "smarthome.server.s.";
-  private String[] mSubscriptionTopics;
+  private String[] mSubscriptionTopics = new String[]{};
 
   private final String publishTopic = "exampleAndroidPublishTopic";
   private final String mPublishMessage = "Hello World!";
@@ -98,6 +101,7 @@ public class MQTTService extends Service {
 
     mMessenger = intent.getParcelableExtra(EXTRA_MQTT_MESSENGER);
     mClientId = intent.getStringExtra(EXTRA_CLIENT_ID);
+    mSubscriptionTopics = intent.getStringArrayExtra(EXTRA_TOPICS);
     initMQQT();
 
     return START_STICKY;
@@ -106,8 +110,8 @@ public class MQTTService extends Service {
   private void initMQQT() {
     if (mMqttAndroidClient != null && mMqttAndroidClient.isConnected()) return;
 
-    mSubscriptionTopics = new String[2];
-    mSubscriptionTopics[0] = "smarthome.server.s." + MQQTUtils.getAndroidID(getContext());
+//    mSubscriptionTopics = new String[2];
+//    mSubscriptionTopics[0] = "smarthome.server.s." + MQQTUtils.getAndroidID(getContext());
 //    mSubscriptionTopics[1] = "smarthome.server.s.123.specfocu";
     mClientId = MQQTUtils.getAndroidID(getContext());
 
@@ -206,8 +210,7 @@ public class MQTTService extends Service {
 
   private void subscribeToTopic() {
     try {
-
-      mMqttAndroidClient.subscribe(mSubscriptionTopics, new int[]{1, 1}, null, new IMqttActionListener() {
+      mMqttAndroidClient.subscribe(mSubscriptionTopics, initQos(), null, new IMqttActionListener() {
         @Override
         public void onSuccess(IMqttToken asyncActionToken) {
           showLog("Subscribed!");
@@ -234,6 +237,14 @@ public class MQTTService extends Service {
       System.err.println("Exception whilst subscribing");
       ex.printStackTrace();
     }
+  }
+
+  private int[] initQos() {
+    int[] qos = new int[mSubscriptionTopics.length];
+    for (int i = 0; i < qos.length; i++) {
+      qos[i] = 1;
+    }
+    return qos;
   }
 
   private void sendMQMessage(int what, MQMessage mqMessage) {

@@ -16,12 +16,15 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.blueflybee.mqttdroidlibrary.MQQTUtils;
 import com.blueflybee.mqttdroidlibrary.data.MQMessage;
 import com.blueflybee.mqttdroidlibrary.service.MQTTService;
 
 public class MainActivity extends AppCompatActivity {
 
   private MQTTService mMQTTService;
+
+  private String[] mSubscriptionTopics;
 
   private final ServiceConnection mServiceConnection = new ServiceConnection() {
     @Override
@@ -41,12 +44,21 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
+    mSubscriptionTopics = new String[]{
+        "smarthome.server.s." + MQQTUtils.getAndroidID(this)
+//    mSubscriptionTopics[1] = "smarthome.server.s.123.specfocu";
+    };
+    //    mSubscriptionTopics = new String[2];
+//    mSubscriptionTopics[0] = "smarthome.server.s." + MQQTUtils.getAndroidID(getContext());
+//    mSubscriptionTopics[1] = "smarthome.server.s.123.specfocu";
+
     findViewById(R.id.btn_start_service).setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
         Intent intent = new Intent(MainActivity.this, MQTTService.class);
         intent.putExtra(MQTTService.EXTRA_MQTT_MESSENGER, new Messenger(mHandler));
         intent.putExtra(MQTTService.EXTRA_CLIENT_ID, clientId());
+        intent.putExtra(MQTTService.EXTRA_TOPICS, mSubscriptionTopics);
         startService(intent);
 
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
