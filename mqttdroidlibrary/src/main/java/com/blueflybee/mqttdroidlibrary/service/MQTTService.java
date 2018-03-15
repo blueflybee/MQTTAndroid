@@ -24,6 +24,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import java.util.Arrays;
+
 /**
  * <pre>
  *     author : shaojun
@@ -50,9 +52,12 @@ public class MQTTService extends Service {
   //  private final String mServerUri = "tcp://192.168.90.200:61613";
   private final String mServerUri = "tcp://192.168.92.53:1883";
 
+  //android id
   private String mClientId = "";
-  //  smarthome.topic.{mac}
-  private String mSubscriptionTopic = "smarthome.topic.";
+  //  smarthome/server/s/{android id}
+//  private String mSubscriptionTopics = "smarthome.server.s.";
+  private String[] mSubscriptionTopics;
+
   private final String publishTopic = "exampleAndroidPublishTopic";
   private final String mPublishMessage = "Hello World!";
   private final String mUserName = "doorbell_client";
@@ -64,8 +69,6 @@ public class MQTTService extends Service {
   public void onCreate() {
     System.out.println(TAG + ".onCreate+++++++++++++++++++++++++++++++++++");
     acquireWakeLock();
-
-//    registerReceiver(getBleReceiver(), BleService.getIntentFilter());
   }
 
   @Override
@@ -74,7 +77,6 @@ public class MQTTService extends Service {
     releaseWakeLock();
     super.onDestroy();
     close();
-//    unregisterReceiver(getBleReceiver());
   }
 
   @Nullable
@@ -104,7 +106,13 @@ public class MQTTService extends Service {
   private void initMQQT() {
     if (mMqttAndroidClient != null && mMqttAndroidClient.isConnected()) return;
 
-    mSubscriptionTopic = mSubscriptionTopic + MQQTUtils.getAndroidID(getContext());
+    mSubscriptionTopics = new String[2];
+    mSubscriptionTopics[0] = "smarthome.server.s." + MQQTUtils.getAndroidID(getContext());
+//    mSubscriptionTopics[1] = "smarthome.server.s.123.specfocu";
+    mClientId = MQQTUtils.getAndroidID(getContext());
+
+    System.out.println("mSubscriptionTopics = " + Arrays.toString(mSubscriptionTopics));
+    System.out.println("mClientId = " + mClientId);
 
     mMqttAndroidClient = new MqttAndroidClient(getApplicationContext(), mServerUri, mClientId);
     mMqttAndroidClient.setCallback(new MqttCallbackExtended() {
@@ -150,7 +158,7 @@ public class MQTTService extends Service {
       MqttMessage message = new MqttMessage();
       message.setQos(1);
       message.setPayload(mPublishMessage.getBytes());
-      mMqttAndroidClient.publish(mSubscriptionTopic, message);
+      mMqttAndroidClient.publish(mSubscriptionTopics[0], message);
       showLog("Message Published");
       if (!mMqttAndroidClient.isConnected()) {
         showLog(mMqttAndroidClient.getBufferedMessageCount() + " messages in buffer.");
@@ -198,7 +206,8 @@ public class MQTTService extends Service {
 
   private void subscribeToTopic() {
     try {
-      mMqttAndroidClient.subscribe(mSubscriptionTopic, 1, null, new IMqttActionListener() {
+
+      mMqttAndroidClient.subscribe(mSubscriptionTopics, new int[]{1, 1}, null, new IMqttActionListener() {
         @Override
         public void onSuccess(IMqttToken asyncActionToken) {
           showLog("Subscribed!");
@@ -211,7 +220,7 @@ public class MQTTService extends Service {
       });
 
       // THIS DOES NOT WORK!
-//      mMqttAndroidClient.subscribe(mSubscriptionTopic, 0, new IMqttMessageListener() {
+//      mMqttAndroidClient.subscribe(mSubscriptionTopics, 0, new IMqttMessageListener() {
 //        @Override
 //        public void messageArrived(String topic, MqttMessage message) throws Exception {
 //          // message Arrived!
