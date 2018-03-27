@@ -142,7 +142,7 @@ public class MQTTService extends Service {
 //        showLog("Incoming message: " + new String(message.getPayload()));
         // message Arrived!
         MQMessage mqMessage = new MQMessage(topic, new String(message.getPayload()));
-        System.out.println("mqMessage = " + mqMessage);
+        System.out.println(TAG + " mqMessage = " + mqMessage);
         sendMQMessage(MSG_RECEIVE_SUCCESS, mqMessage);
       }
 
@@ -264,7 +264,7 @@ public class MQTTService extends Service {
   }
 
   private void showLog(String mainText) {
-    System.out.println("LOG: " + mainText);
+    System.out.println(TAG + " mqqt_status = " + mainText);
     MQMessage mqMessage = new MQMessage("mqqt_status", mainText);
     sendMQMessage(MSG_MQTT_STATUS, mqMessage);
   }
