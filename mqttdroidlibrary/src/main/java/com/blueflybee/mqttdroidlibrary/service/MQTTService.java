@@ -53,7 +53,7 @@ public class MQTTService extends Service {
   private MqttAndroidClient mMqttAndroidClient;
 
   //  private final String mServerUri = "tcp://192.168.90.200:61613";
-  private final String mServerUri = "tcp://192.168.92.53:1883";
+  private final String mServerUri = "tcp://mqtt.3caretec.com:1883";
 
   //android id
   private String mClientId = "";
@@ -63,8 +63,8 @@ public class MQTTService extends Service {
 
   private final String publishTopic = "exampleAndroidPublishTopic";
   private final String mPublishMessage = "Hello World!";
-  private final String mUserName = "doorbell_client";
-  private final String mPassword = "doorbell";
+  private final String mUserName = "mqtt_client";
+  private final String mPassword = "mqtt_client_pass";
 
   private Messenger mMessenger;
 
