@@ -167,7 +167,7 @@ public class MQTTService extends Service {
       if (!mMqttAndroidClient.isConnected()) {
         showLog(mMqttAndroidClient.getBufferedMessageCount() + " messages in buffer.");
       }
-    } catch (MqttException e) {
+    } catch (Exception e) {
       System.err.println("Error Publishing: " + e.getMessage());
       e.printStackTrace();
     }
@@ -203,13 +203,14 @@ public class MQTTService extends Service {
         }
       });
 
-    } catch (MqttException ex) {
+    } catch (Exception ex) {
       ex.printStackTrace();
     }
   }
 
   private void subscribeToTopic() {
     try {
+      if (mMqttAndroidClient == null) return;
       mMqttAndroidClient.subscribe(mSubscriptionTopics, initQos(), null, new IMqttActionListener() {
         @Override
         public void onSuccess(IMqttToken asyncActionToken) {
@@ -233,7 +234,7 @@ public class MQTTService extends Service {
 //        }
 //      });
 
-    } catch (MqttException ex) {
+    } catch (Exception ex) {
       System.err.println("Exception whilst subscribing");
       ex.printStackTrace();
     }
@@ -258,7 +259,7 @@ public class MQTTService extends Service {
       message.what = what;
       message.obj = mqMessage;
       mMessenger.send(message);
-    } catch (RemoteException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -276,7 +277,7 @@ public class MQTTService extends Service {
         mMqttAndroidClient.disconnect();
         mMqttAndroidClient = null;
       }
-    } catch (MqttException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
   }
