@@ -97,12 +97,16 @@ public class MQTTService extends Service {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-    System.out.println(TAG + ".onStartCommand+++++++++++++++++++++++++++++++++++");
+    try {
+      System.out.println(TAG + ".onStartCommand+++++++++++++++++++++++++++++++++++");
 
-    mMessenger = intent.getParcelableExtra(EXTRA_MQTT_MESSENGER);
-    mClientId = intent.getStringExtra(EXTRA_CLIENT_ID);
-    mSubscriptionTopics = intent.getStringArrayExtra(EXTRA_TOPICS);
-    initMQQT();
+      mMessenger = intent.getParcelableExtra(EXTRA_MQTT_MESSENGER);
+      mClientId = intent.getStringExtra(EXTRA_CLIENT_ID);
+      mSubscriptionTopics = intent.getStringArrayExtra(EXTRA_TOPICS);
+      initMQQT();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
 
     return START_STICKY;
   }
