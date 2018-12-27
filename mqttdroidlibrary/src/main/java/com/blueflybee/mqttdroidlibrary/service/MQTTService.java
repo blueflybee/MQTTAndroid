@@ -4,15 +4,16 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.PowerManager;
-import android.os.RemoteException;
 import android.support.annotation.Nullable;
 
 import com.blueflybee.mqttdroidlibrary.MQQTUtils;
 import com.blueflybee.mqttdroidlibrary.data.MQMessage;
+import com.blueflybee.mqttdroidlibrary.util.LogTestUtils;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions;
@@ -21,7 +22,6 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.Arrays;
@@ -45,6 +45,7 @@ public class MQTTService extends Service {
 
   public static final int MSG_RECEIVE_SUCCESS = 1;
   public static final int MSG_MQTT_STATUS = 2;
+  public static final long TIME = 1000 * 60 * 60 * 200;
 
   private final MQTTBinder mBinder = new MQTTBinder();
 
@@ -67,31 +68,52 @@ public class MQTTService extends Service {
   private final String mPassword = "mqtt_client_pass";
 
   private Messenger mMessenger;
+  private CountDownTimer mTimer;
 
   @Override
   public void onCreate() {
     System.out.println(TAG + ".onCreate+++++++++++++++++++++++++++++++++++");
+    LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + TAG + ".onCreate");
     acquireWakeLock();
+
+    mTimer = new CountDownTimer(TIME, 2000) {
+
+      @Override
+      public void onTick(long millisUntilFinished) {
+        LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + "onTick...");
+      }
+
+      @Override
+      public void onFinish() {
+
+      }
+    }.start();
   }
 
   @Override
   public void onDestroy() {
     System.out.println(TAG + ".onDestroy+++++++++++++++++++++++++");
+    LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + TAG + ".onDestroy");
     releaseWakeLock();
     super.onDestroy();
     close();
+    if (mTimer != null) {
+      mTimer.cancel();
+    }
   }
 
   @Nullable
   @Override
   public IBinder onBind(Intent intent) {
     System.out.println(TAG + ".onBind+++++++++++++++++++++++++++++++++++");
+    LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + TAG + ".onBind");
     return mBinder;
   }
 
   @Override
   public boolean onUnbind(Intent intent) {
     System.out.println(TAG + ".onUnbind+++++++++++++++++++++++++++++++++++");
+    LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + TAG + ".onUnbind");
     return super.onUnbind(intent);
   }
 
@@ -99,7 +121,7 @@ public class MQTTService extends Service {
   public int onStartCommand(Intent intent, int flags, int startId) {
     try {
       System.out.println(TAG + ".onStartCommand+++++++++++++++++++++++++++++++++++");
-
+      LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + TAG + ".onStartCommand");
       mMessenger = intent.getParcelableExtra(EXTRA_MQTT_MESSENGER);
       mClientId = intent.getStringExtra(EXTRA_CLIENT_ID);
       mSubscriptionTopics = intent.getStringArrayExtra(EXTRA_TOPICS);
@@ -107,6 +129,8 @@ public class MQTTService extends Service {
     } catch (Exception e) {
       e.printStackTrace();
     }
+
+
 
     return START_STICKY;
   }
@@ -129,16 +153,19 @@ public class MQTTService extends Service {
 
         if (reconnect) {
           showLog("Reconnected to : " + serverURI);
+          LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + "Reconnected to: " + serverURI);
           // Because Clean Session is true, we need to re-subscribe
           subscribeToTopic();
         } else {
           showLog("Connected to: " + serverURI);
+          LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + "Connected to: " + serverURI);
         }
       }
 
       @Override
       public void connectionLost(Throwable cause) {
         showLog("The Connection was lost.");
+        LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   The Connection was lost.");
       }
 
       @Override
@@ -147,6 +174,8 @@ public class MQTTService extends Service {
         // message Arrived!
         MQMessage mqMessage = new MQMessage(topic, new String(message.getPayload()));
         System.out.println(TAG + " mqMessage = " + mqMessage);
+        LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + TAG + "messageArrived mqMessage = " + mqMessage);
+
         sendMQMessage(MSG_RECEIVE_SUCCESS, mqMessage);
       }
 
@@ -203,6 +232,7 @@ public class MQTTService extends Service {
         @Override
         public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
           showLog("Failed to connect to: " + mServerUri);
+          LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + "Failed to connect to: " + mServerUri);
           close();
         }
       });
@@ -219,11 +249,14 @@ public class MQTTService extends Service {
         @Override
         public void onSuccess(IMqttToken asyncActionToken) {
           showLog("Subscribed!");
+          LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   Subscribed!");
+
         }
 
         @Override
         public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
           showLog("Failed to subscribe");
+          LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   Failed to subscribe");
         }
       });
 
