@@ -10,6 +10,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.PowerManager;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.blueflybee.mqttdroidlibrary.MQQTUtils;
 import com.blueflybee.mqttdroidlibrary.data.MQMessage;
@@ -76,18 +77,18 @@ public class MQTTService extends Service {
     LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + TAG + ".onCreate");
     acquireWakeLock();
 
-    mTimer = new CountDownTimer(TIME, 2000) {
-
-      @Override
-      public void onTick(long millisUntilFinished) {
-        LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + "onTick...");
-      }
-
-      @Override
-      public void onFinish() {
-
-      }
-    }.start();
+//    mTimer = new CountDownTimer(TIME, 2000) {
+//
+//      @Override
+//      public void onTick(long millisUntilFinished) {
+//        LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + "onTick...");
+//      }
+//
+//      @Override
+//      public void onFinish() {
+//
+//      }
+//    }.start();
   }
 
   @Override
@@ -174,6 +175,7 @@ public class MQTTService extends Service {
         // message Arrived!
         MQMessage mqMessage = new MQMessage(topic, new String(message.getPayload()));
         System.out.println(TAG + " mqMessage = " + mqMessage);
+        Log.d(TAG, LogTestUtils.getNowString() + "   " + TAG + "messageArrived mqMessage = " + mqMessage);
         LogTestUtils.testLogToFile(getContext(), "mqtt_log.txt", LogTestUtils.getNowString() + "   " + TAG + "messageArrived mqMessage = " + mqMessage);
 
         sendMQMessage(MSG_RECEIVE_SUCCESS, mqMessage);
